@@ -1,0 +1,164 @@
+/* ============================================================
+   COMPAGNON — Design tokens
+   Light-first, calm, Apple-clean. All values map 1:1 to the
+   CSS variables a Vite/React build would consume.
+   ============================================================ */
+
+:root {
+  /* ---- Color: light (primary) ---- */
+  --paper:        #F7F6F3;  /* app background — warm paper, never stark white */
+  --paper-2:      #F1EFEA;  /* recessed wells, hovered list rows */
+  --surface:      #FFFFFF;  /* cards float above paper */
+  --surface-2:    #FBFAF8;  /* subtle inner panels */
+  --surface-3:    #F3F1EC;  /* chips, quiet fills */
+
+  --ink:          #1E1C1A;  /* near-black, warm */
+  --ink-2:        #57534E;  /* secondary text */
+  --ink-3:        #8B867F;  /* metadata, captions */
+  --ink-4:        #B4AFA7;  /* faint, placeholder */
+
+  --line:         #E7E4DE;  /* hairline borders */
+  --line-2:       #D9D5CD;  /* stronger dividers */
+
+  --accent:       #3A6EA5;  /* primary — calm blue */
+  --accent-press: #2F5C8A;  /* pressed / hover-darken */
+  --accent-soft:  #EAF0F7;  /* tinted background */
+  --accent-ring:  #AFC6E1;  /* focus ring base */
+  --on-accent:    #FFFFFF;
+
+  --got:          #4E8C6A;  /* "got it" — calm sage */
+  --got-soft:     #E9F1EB;
+  --got-ink:      #2F6147;
+
+  --miss:         #BE7B5E;  /* "missed it" — soft clay, NEVER red */
+  --miss-soft:    #F6ECE5;
+  --miss-ink:     #8E563B;
+
+  --warm:         #C99A4A;  /* "almost / hard" — muted amber */
+  --warm-soft:    #F6EFE0;
+
+  /* ---- Type ---- */
+  --font-sans: "Hanken Grotesk", ui-sans-serif, -apple-system, system-ui, sans-serif;
+  --font-serif: "Newsreader", ui-serif, Georgia, "Times New Roman", serif;
+
+  --text-xs:   0.75rem;   /* 12 */
+  --text-sm:   0.875rem;  /* 14 */
+  --text-base: 1rem;      /* 16 */
+  --text-md:   1.0625rem; /* 17 */
+  --text-lg:   1.1875rem; /* 19 */
+  --text-xl:   1.375rem;  /* 22 */
+  --text-2xl:  1.75rem;   /* 28 */
+  --text-3xl:  2.25rem;   /* 36 */
+  --text-4xl:  2.875rem;  /* 46 */
+  --text-5xl:  3.75rem;   /* 60 */
+  --text-6xl:  5rem;      /* 80 */
+
+  --tracking-tight: -0.02em;
+  --tracking-snug:  -0.011em;
+  --tracking-wide:  0.04em;
+
+  /* ---- Spacing (4px base) ---- */
+  --space-1: 4px;   --space-2: 8px;   --space-3: 12px;  --space-4: 16px;
+  --space-5: 20px;  --space-6: 24px;  --space-7: 32px;  --space-8: 40px;
+  --space-9: 48px;  --space-10: 64px; --space-11: 80px; --space-12: 96px;
+
+  /* ---- Radii ---- */
+  --radius-xs: 6px;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+  --radius-2xl: 32px;
+  --radius-full: 999px;
+
+  /* ---- Elevation: soft, diffuse, low-opacity ---- */
+  --shadow-xs: 0 1px 2px rgba(28,26,24,.04);
+  --shadow-sm: 0 1px 2px rgba(28,26,24,.04), 0 2px 6px rgba(28,26,24,.04);
+  --shadow-md: 0 2px 6px rgba(28,26,24,.04), 0 10px 28px rgba(28,26,24,.06);
+  --shadow-lg: 0 4px 12px rgba(28,26,24,.05), 0 24px 60px rgba(28,26,24,.09);
+  --shadow-card: 0 1px 3px rgba(28,26,24,.05), 0 18px 44px rgba(28,26,24,.07);
+
+  /* ---- Motion: soft & calm ---- */
+  --ease-calm:  cubic-bezier(0.16, 1, 0.30, 1);   /* gentle settle */
+  --ease-soft:  cubic-bezier(0.40, 0, 0.20, 1);   /* symmetric */
+  --dur-fast: 180ms;
+  --dur:      320ms;
+  --dur-slow: 520ms;
+  --dur-rest: 760ms;
+
+  color-scheme: light;
+}
+
+/* ============================================================
+   Dark mode — a clean secondary. Warm near-black, lifted ink.
+   ============================================================ */
+:root[data-theme="dark"] {
+  --paper:        #161513;
+  --paper-2:      #100F0E;
+  --surface:      #211F1C;
+  --surface-2:    #262320;
+  --surface-3:    #2E2B27;
+
+  --ink:          #F3F0EA;
+  --ink-2:        #B9B3AA;
+  --ink-3:        #8A847B;
+  --ink-4:        #5E5950;
+
+  --line:         #322E2A;
+  --line-2:       #3D3833;
+
+  --accent:       #7BA6D8;
+  --accent-press: #9CBEE5;
+  --accent-soft:  #1F2A38;
+  --accent-ring:  #3C5A7E;
+  --on-accent:    #131C26;
+
+  --got:          #7BB591;
+  --got-soft:     #1C2A22;
+  --got-ink:      #A6D2B6;
+
+  --miss:         #D49E80;
+  --miss-soft:    #2E2119;
+  --miss-ink:     #E6B79A;
+
+  --warm:         #D9B36E;
+  --warm-soft:    #2C2517;
+
+  --shadow-xs: 0 1px 2px rgba(0,0,0,.30);
+  --shadow-sm: 0 1px 2px rgba(0,0,0,.30), 0 2px 6px rgba(0,0,0,.28);
+  --shadow-md: 0 2px 6px rgba(0,0,0,.32), 0 10px 28px rgba(0,0,0,.40);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,.38), 0 24px 60px rgba(0,0,0,.52);
+  --shadow-card: 0 1px 3px rgba(0,0,0,.34), 0 18px 44px rgba(0,0,0,.46);
+
+  color-scheme: dark;
+}
+
+/* ---- Reset / base ---- */
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: var(--font-sans);
+  background: var(--paper);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "kern" 1, "liga" 1;
+  transition: background var(--dur) var(--ease-soft), color var(--dur) var(--ease-soft);
+}
+/* When switching themes, suppress var-driven transitions so colors resolve instantly (no stale-value freeze) */
+:root[data-switching] *,
+:root[data-switching] *::before,
+:root[data-switching] *::after {
+  transition: none !important;
+}
+::selection { background: var(--accent-soft); color: var(--accent-press); }
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-xs);
+}
+button { font-family: inherit; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: .001ms !important; transition-duration: .001ms !important; }
+}

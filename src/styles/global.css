@@ -1,0 +1,35 @@
+/* ============================================================
+   COMPAGNON — app-level globals (keyframes, scrollbars, root)
+   Ported from the Claude Design prototype's index.html <style>.
+   Design tokens live in tokens.css.
+   ============================================================ */
+
+#root {
+  height: 100vh;
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(18px) scale(.985); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes slideIn {
+  from { transform: translateX(40px); opacity: .4; }
+  to   { transform: translateX(0); opacity: 1; }
+}
+
+/* calm scrollbars */
+::-webkit-scrollbar { width: 11px; height: 11px; }
+::-webkit-scrollbar-thumb {
+  background: var(--line-2);
+  border-radius: 999px;
+  border: 3px solid var(--paper);
+}
+::-webkit-scrollbar-thumb:hover { background: var(--ink-4); }
