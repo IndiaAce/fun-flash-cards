@@ -39,3 +39,11 @@ coverage/
 # Vite / TS caches
 *.tsbuildinfo
 .vite/
+
+# Personal corpus / import data and backups (use the app's Export instead)
+/words.txt
+compagnon-backup-*.json
+
+# User scratch / explicitly-not-for-commit material
+/for_clode_DO-NOT-COMMIT/
+/scratchpad.md

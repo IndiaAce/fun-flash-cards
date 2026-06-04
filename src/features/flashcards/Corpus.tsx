@@ -6,7 +6,7 @@
    to the live store.
    ============================================================ */
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Button,
@@ -23,6 +23,8 @@ import {
 import { useStore } from "@/app/store";
 import { accuracyByCategory, accuracyByTag, weaknessScore } from "@/lib/srs";
 import { suggestTags } from "@/lib/llm";
+import { guessCardType } from "@/lib/cards";
+import { ImportDuolingo } from "./ImportDuolingo";
 import type { CardType, Flashcard, Gender } from "@/lib/types";
 import type { NewCardInput } from "@/lib/storage";
 
@@ -59,6 +61,8 @@ export function Corpus() {
   const [sort, setSort] = useState<"recent" | "weak" | "alpha">("recent");
   const [editing, setEditing] = useState<Flashcard | "new" | null>(null);
   const [bulkOpen, setBulkOpen] = useState(false);
+  const [duoOpen, setDuoOpen] = useState(false);
+  const [limit, setLimit] = useState(200);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const catStats = useMemo(() => accuracyByCategory(reviewLog), [reviewLog]);
@@ -88,6 +92,10 @@ export function Corpus() {
     () => [...new Set(cards.map((c) => c.category).filter(Boolean))] as string[],
     [cards],
   );
+
+  // Render a capped window so a corpus of thousands stays smooth; reset on filter change.
+  useEffect(() => setLimit(200), [q, type, cat, sort]);
+  const visible = filtered.slice(0, limit);
 
   const onPickFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -122,6 +130,7 @@ export function Corpus() {
           <Button variant="ghost" size="sm" icon="download" onClick={exportBackup}>Export</Button>
           <Button variant="ghost" size="sm" icon="upload" onClick={() => fileRef.current?.click()}>Import</Button>
           <input ref={fileRef} type="file" accept="application/json" hidden onChange={onPickFile} />
+          <Button variant="quiet" size="sm" icon="download" onClick={() => setDuoOpen(true)}>Duolingo</Button>
           <Button variant="quiet" size="sm" icon="layers" onClick={() => setBulkOpen(true)}>Bulk add</Button>
           <Button variant="primary" size="sm" icon="plus" onClick={() => setEditing("new")}>New card</Button>
         </div>
@@ -184,7 +193,7 @@ export function Corpus() {
         </Surface>
       ) : (
         <Surface pad={0} elevation="sm" style={{ overflow: "hidden" }}>
-          {filtered.map((c, i) => {
+          {visible.map((c, i) => {
             const st = strengthLabel(weakOf.get(c.id) ?? 0);
             return (
               <div
@@ -237,6 +246,15 @@ export function Corpus() {
         </Surface>
       )}
 
+      {filtered.length > limit && (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 14, marginTop: 18 }}>
+          <span style={{ fontSize: "var(--text-sm)", color: "var(--ink-3)" }}>
+            Showing {visible.length.toLocaleString()} of {filtered.length.toLocaleString()}
+          </span>
+          <Button variant="quiet" size="sm" onClick={() => setLimit((n) => n + 400)}>Show more</Button>
+        </div>
+      )}
+
       {editing && (
         <CardEditor
           card={editing === "new" ? null : editing}
@@ -254,6 +272,7 @@ export function Corpus() {
       )}
 
       {bulkOpen && <BulkAdd onClose={() => setBulkOpen(false)} />}
+      {duoOpen && <ImportDuolingo onClose={() => setDuoOpen(false)} />}
     </div>
   );
 }
@@ -410,13 +429,6 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
    Bulk add (paste a list) — dedupe + deterministic auto-tagging
    ============================================================ */
 
-function guessType(front: string): CardType {
-  const words = front.trim().split(/\s+/).length;
-  if (/[.!?…]$/.test(front.trim()) || words > 5) return "sentence";
-  if (words <= 2) return "word";
-  return "phrase";
-}
-
 function parseLines(text: string): NewCardInput[] {
   const out: NewCardInput[] = [];
   for (const raw of text.split("\n")) {
@@ -426,7 +438,7 @@ function parseLines(text: string): NewCardInput[] {
     const front = parts[0]?.trim();
     const back = (parts[1] ?? "").trim();
     if (!front) continue;
-    const type = guessType(front);
+    const type = guessCardType(front);
     const s = suggestTags({ front, back, type });
     out.push({ type, front, back, tags: s.tags, category: s.category });
   }
