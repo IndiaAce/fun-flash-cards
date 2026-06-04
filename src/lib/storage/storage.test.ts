@@ -4,7 +4,7 @@ import { normalizeText, repo, makeCard, type NewCardInput } from "./index";
 import type { PersistedState } from "@/lib/types";
 
 function emptyState(): PersistedState {
-  return { schemaVersion: SCHEMA_VERSION, cards: [], reviewLog: [], customCheatSheets: [], settings: { theme: "light", accent: "Calm blue", revealStyle: "inplace", gradeStyle: "pills" } };
+  return { schemaVersion: SCHEMA_VERSION, cards: [], reviewLog: [], customCheatSheets: [], settings: { theme: "light", accent: "Calm blue", revealStyle: "inplace", gradeStyle: "pills", palBackend: "auto" } };
 }
 
 const word = (front: string, type: NewCardInput["type"] = "word"): NewCardInput => ({

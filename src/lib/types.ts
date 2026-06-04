@@ -71,12 +71,15 @@ export type ThemeName = "light" | "dark";
 export type AccentName = "Calm blue" | "Muted teal" | "Aubergine" | "Terracotta";
 export type RevealStyle = "inplace" | "flip";
 export type GradeStyle = "pills" | "slider" | "swipe";
+/** Which LLM backend the pal should use. "auto" = first reachable. */
+export type PalBackend = "auto" | "claude-code" | "off";
 
 export interface Settings {
   theme: ThemeName;
   accent: AccentName;
   revealStyle: RevealStyle;
   gradeStyle: GradeStyle;
+  palBackend: PalBackend;
 }
 
 /* ---------- Persisted root ---------- */

@@ -1,25 +1,117 @@
 /* ============================================================
-   COMPAGNON — LLM sidecar (Pass 2 placeholder)
-   This will be a tiny localhost bridge that shells out to the
-   Claude Code CLI (`claude -p "<prompt>" --output-format json`)
-   so the web app can use LLM features through your Max
-   subscription — no paid API calls. See docs/LLM.md.
+   COMPAGNON — LLM sidecar (Claude Code bridge)
+   A tiny localhost HTTP bridge that shells out to the Claude Code
+   CLI so the web app can use LLM features through your Max
+   subscription — no paid API calls. Zero dependencies.
 
-   It is intentionally NOT implemented in Pass 1: the app is fully
-   usable without it, and LLM-powered buttons show a tasteful
-   "not connected yet" state. Running it now just prints guidance.
-   TODO(india): implement the HTTP bridge + Claude Code adapter.
+   The web app reaches this via Vite's /pal proxy (→ :8787). The
+   app is fully usable without it; if it's down, the Pal features
+   show a calm "not connected" state.
+
+   Run it with:  npm run sidecar
+   See docs/LLM.md.
    ============================================================ */
 
-console.log(
-  [
-    "Compagnon sidecar — not implemented yet (Pass 2).",
-    "",
-    "This bridge will expose localhost endpoints that call the Claude Code CLI",
-    "in non-interactive mode. See docs/LLM.md for the design and setup.",
-    "",
-    "The app works fully without it.",
-  ].join("\n"),
-);
+import { createServer } from "node:http";
+import { execFile } from "node:child_process";
 
-process.exit(0);
+const PORT = Number(process.env.PORT ?? 8787);
+const MODEL = process.env.PAL_CLAUDE_MODEL || ""; // empty = the CLI's default model
+const MAX_PROMPT = 24_000; // characters — a generous cap, prompts are small
+const TIMEOUT_MS = 120_000;
+
+/** Promise wrapper around execFile (args array — never a shell string). */
+function run(cmd, args, opts = {}) {
+  return new Promise((resolve, reject) => {
+    execFile(cmd, args, { timeout: TIMEOUT_MS, maxBuffer: 8 << 20, ...opts }, (err, stdout, stderr) => {
+      if (err) {
+        err.stderr = stderr;
+        reject(err);
+      } else {
+        resolve(stdout);
+      }
+    });
+  });
+}
+
+function send(res, status, body) {
+  const text = JSON.stringify(body);
+  res.writeHead(status, { "content-type": "application/json" });
+  res.end(text);
+}
+
+function readBody(req) {
+  return new Promise((resolve, reject) => {
+    let data = "";
+    req.on("data", (c) => {
+      data += c;
+      if (data.length > MAX_PROMPT * 2) reject(new Error("payload too large"));
+    });
+    req.on("end", () => resolve(data));
+    req.on("error", reject);
+  });
+}
+
+/** Is the Claude CLI installed and callable? */
+async function claudeAvailable() {
+  try {
+    await run("claude", ["--version"]);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** Run one non-interactive completion through `claude -p … --output-format json`. */
+async function complete(prompt) {
+  const args = ["-p", prompt, "--output-format", "json"];
+  if (MODEL) args.push("--model", MODEL);
+  const stdout = await run("claude", args);
+  let parsed;
+  try {
+    parsed = JSON.parse(stdout);
+  } catch {
+    // Older/newer CLIs might not wrap in JSON — treat stdout as the text.
+    return stdout.trim();
+  }
+  if (parsed.is_error || (parsed.subtype && parsed.subtype !== "success")) {
+    throw new Error(parsed.result || parsed.subtype || "claude reported an error");
+  }
+  return typeof parsed.result === "string" ? parsed.result : stdout.trim();
+}
+
+const server = createServer(async (req, res) => {
+  const url = (req.url || "").split("?")[0];
+
+  if (req.method === "GET" && url === "/pal-api/health") {
+    const ok = await claudeAvailable();
+    return send(res, 200, { ok, backend: "claude-code", model: MODEL || "default" });
+  }
+
+  if (req.method === "POST" && url === "/pal-api/complete") {
+    try {
+      const raw = await readBody(req);
+      const { prompt } = JSON.parse(raw || "{}");
+      if (typeof prompt !== "string" || !prompt.trim()) {
+        return send(res, 400, { error: "Missing 'prompt' string." });
+      }
+      if (prompt.length > MAX_PROMPT) {
+        return send(res, 413, { error: "Prompt too large." });
+      }
+      const text = await complete(prompt);
+      return send(res, 200, { text });
+    } catch (err) {
+      console.error("[pal] /pal/complete failed:", err?.message || err);
+      return send(res, 500, { error: String(err?.message || err) });
+    }
+  }
+
+  send(res, 404, { error: "Not found." });
+});
+
+server.listen(PORT, "127.0.0.1", () => {
+  console.log(`Compagnon sidecar (Claude Code) on http://127.0.0.1:${PORT}`);
+  console.log(`  GET  /pal-api/health`);
+  console.log(`  POST /pal-api/complete  { prompt }`);
+  console.log(MODEL ? `  model: ${MODEL}` : "  model: CLI default");
+});

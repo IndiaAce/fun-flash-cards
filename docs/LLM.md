@@ -1,85 +1,86 @@
 # The LLM "pal" layer
 
-Compagnon's smart features — card suggestions, LLM auto-tagging, and roleplay — run through **one
-interface** with interchangeable, fully local backends. No paid API calls; nothing leaves your
-machine. The core app works completely without any of it.
+Compagnon's smart features — **card suggestions**, **smart tagging**, and **roleplay** — run through
+**one interface** with a local backend. No paid API calls; nothing leaves your machine. The core app
+works completely without any of it.
 
-> **Status: the interface and the deterministic fallback ship in Pass 1; the adapters and sidecar
-> are Pass 2.** Until an adapter is registered and reachable, `getActiveAdapter()` returns `null`,
-> the **Pal** screen shows a calm "not connected yet" state, and tagging falls back to the
-> deterministic tagger. This document describes the intended setup.
+> **Status: implemented for Claude Code.** `ClaudeCodeAdapter` is live; `OllamaAdapter` is a
+> documented stub (`isAvailable()` → false) for when you install Ollama. When no backend is reachable,
+> `getActiveAdapter()` returns `null`, the **Pal** screen shows a calm "not connected" state, and the
+> card editor's tagging falls back to the deterministic tagger.
 
-## The contract
+## How it fits together
 
-`src/lib/llm/types.ts` defines `LLMAdapter`:
-
-```ts
-interface LLMAdapter {
-  readonly id: string;
-  readonly label: string;
-  isAvailable(): Promise<boolean>;
-  suggestCards(opts): Promise<CardSuggestion[]>;
-  tagCard(card): Promise<TagSuggestion>;
-  roleplayTurn(history, draft): Promise<RoleplayMessage>;
-}
+```
+Pal UI / card editor
+      │  (LLMAdapter — src/lib/llm)
+      ▼
+POST /pal-api/complete   ──Vite proxy──►   sidecar (:8787)   ──►  `claude -p "<prompt>" --output-format json`
 ```
 
-Feature code never imports a concrete backend — it asks `getActiveAdapter()` for the first reachable
-one (`src/lib/llm/index.ts`). Registering adapters is the only change Pass 2 makes to wiring.
+- The browser only ever calls `/pal-api/*`, which Vite proxies to the sidecar (`vite.config.ts`). The
+  `/pal-api` prefix is deliberately distinct from the in-app `/pal` route.
+- The **TS adapter** owns prompt-building (`prompts.ts`) and output parsing (`parse.ts`) — both unit
+  tested. The **sidecar** is a thin, generic "run this prompt" bridge.
 
-### Always-on fallback
+## Setup (Claude Code)
 
-`suggestTags()` (`src/lib/llm/tagger.ts`) is a deterministic keyword/heuristic tagger — it detects
-subjonctif triggers, travel/food/work/nature vocabulary, politeness, and guesses a CEFR level. It
-needs no model and powers the **Suggest** button in the card editor today. You always confirm tags
-before they're applied.
+1. Install Claude Code and log in with your Max account (`claude`). No API key, no per-call cost.
+2. `npm run sidecar` — starts the bridge on `http://127.0.0.1:8787`.
+3. `npm run dev` — the Pal features detect the sidecar via `/pal-api/health` and light up. Pick the
+   backend in **Settings → Study pal** (Auto / Claude Code / Off).
 
-## Backend 1 — Claude Code (default, uses your Max subscription)
+That's it. Stop the sidecar and everything degrades gracefully.
 
-A tiny local Node sidecar exposes `localhost` endpoints that shell out to the Claude Code CLI in
-non-interactive mode. The web app talks to the sidecar over `localhost` (Vite proxies `/pal` →
-`http://localhost:8787`).
+### The sidecar (`sidecar/server.mjs`)
 
-**Setup (intended):**
+Zero dependencies. Two endpoints:
 
-1. Install Claude Code and log in with your Max account (`claude`).
-2. `npm run sidecar` — starts the bridge on `:8787`.
-3. In the app, the Pal features light up automatically once the sidecar answers `isAvailable()`.
+- `GET /pal-api/health` → `{ ok, backend: "claude-code", model }` (checks the `claude` CLI is callable).
+- `POST /pal-api/complete` `{ prompt }` → runs `claude -p <prompt> --output-format json`, returns
+  `{ text }` (the CLI's `result` field).
 
-The sidecar invokes the CLI roughly as:
+**Injection-safe:** the CLI is invoked via `execFile` with an **args array**, never a shell string, so
+card text / user input can't inject shell commands. Prompts are length-capped; calls time out at 120s.
 
-```bash
-claude -p "<prompt>" --output-format json
-```
+Env: `PORT` (default 8787), `PAL_CLAUDE_MODEL` (optional — defaults to the CLI's configured model).
 
-> ⚠️ **Verify the flags at build time.** This was checked against `claude` **v2.1.162**, where
-> `-p`/`--print` is non-interactive and `--output-format json` returns structured output. The CLI is
-> not a stable API — confirm the installed version's flags (`claude --help`) and adapt rather than
-> hardcoding. This is an **unofficial pattern** that depends on the CLI and your login and may change;
-> the app must keep working if it breaks (it does — the adapter just reports unavailable).
+> ⚠️ This is an **unofficial pattern** that depends on the Claude CLI and your login, and could break
+> if the CLI changes. Verified against `claude` **v2.1.162** (`-p`/`--print` non-interactive,
+> `--output-format json` → `{ …, "result": "<text>" }`). If you upgrade and the pal stops working,
+> check `claude --help` and adjust `sidecar/server.mjs`. The app keeps working regardless — the
+> adapter just reports unavailable.
 
-## Backend 2 — Ollama / Mistral (fully local fallback)
+## What the pal does
 
-Talk to a local [Ollama](https://ollama.com) server.
+- **Smart card suggestions** (`Pal → Suggested cards`) — pick a theme; the model proposes ~8 leveled
+  cards (with tags, gender, and a one-line reason), avoiding your existing corpus. You approve each
+  before it's added (deduped via the store), tagged `pal`.
+- **Smart tagging** (card editor **Suggest** button) — uses `adapter.tagCard` when a backend is live,
+  else the deterministic `suggestTags` (`src/lib/llm/tagger.ts`). You always confirm.
+- **Roleplay** (`Pal → Roleplay a scene`) — pick a scene (café / gare / hôtel / resto); the pal plays
+  a role in French at your level, one turn at a time, with a translation toggle, gentle corrections,
+  and a "save as flashcard" affordance on its lines.
 
-**Setup (intended):**
+Robustness: the model is asked for strict JSON; `extractJSON` in `parse.ts` tolerates fenced/noisy
+output and the validators drop malformed items, so a stray reply degrades to "nothing usable" rather
+than a crash.
 
-```bash
-ollama pull mistral        # or a French-tuned variant
-ollama serve               # usually already running
-```
+## Adding Ollama (later)
 
-`OllamaAdapter` will POST to `http://localhost:11434/api/chat`. Select the backend in Settings or
-let the registry auto-pick the first reachable one (Claude Code preferred, Ollama fallback).
+`OllamaAdapter` (`src/lib/llm/ollama.ts`) is a stub today. To finish it:
 
-## What the pal will do (Pass 2)
+1. `ollama pull mistral` (or a French-tuned variant); `ollama serve`.
+2. Add an `ollama` backend to `sidecar/server.mjs` that POSTs to `http://localhost:11434/api/chat`
+   (server-side, so no browser CORS), behind the same `/pal-api/complete` shape.
+3. Mirror `ClaudeCodeAdapter` in `ollama.ts`, and add `"ollama"` to the Settings backend toggle.
 
-- **Smart card suggestions** — given your corpus and weak spots, propose cards at your level on a
-  theme you pick (e.g. "10 travel sentences using the subjonctif"). You review/approve before adding.
-- **LLM auto-tagging** — richer tags/categories than the heuristic tagger, behind the same call site.
-- **Roleplay** — a scene chat (au café, à la gare, à l'hôtel) where the pal plays a role in French at
-  your level, gently corrects you, and can spin missed items into flashcards.
+Look for `TODO(india):` in `src/lib/llm/ollama.ts`.
 
-All of it flows through the one adapter, and every LLM-powered button degrades to a tasteful disabled
-state when no backend is available. Look for `TODO(india):` in `src/lib/llm/` for the registration
-seam.
+## Where it lives
+
+- `src/lib/llm/` — `types.ts` (the `LLMAdapter` contract), `client.ts` (`/pal-api` fetch),
+  `prompts.ts`, `parse.ts`, `claude-code.ts`, `ollama.ts` (stub), `tagger.ts` (deterministic
+  fallback), `index.ts` (registry + `getActiveAdapter(prefer)`), `llm.test.ts`.
+- `src/features/pal/` — `Pal.tsx` (suggestions + roleplay) and `usePalAdapter.ts` (status hook).
+- `sidecar/server.mjs` — the bridge.

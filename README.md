@@ -3,13 +3,14 @@
 A local-first French learning pal — spaced-repetition **flashcards** and Markdown-authored,
 interactive **grammar guides**, sharing one calm, Apple-clean design system. Everything runs on your
 machine; your corpus lives in the browser and exports to JSON for git backup. An optional LLM "pal"
-layer (Claude Code or local Ollama) adds card suggestions and roleplay — see [Pass 2](#pass-2--the-llm-pal).
+layer adds card suggestions, smart tagging, and roleplay through your Claude Max subscription — see
+[`docs/LLM.md`](docs/LLM.md).
 
-> Status: the showcase is complete — design system, app shell, storage with export/import,
-> FSRS flashcards, live dashboard insights, a **Duolingo word-list importer**, and a
-> **Markdown content-guide engine** (drop a `.md` in `src/content/`, get an interactive chapter).
-> The LLM adapters, sidecar, and roleplay land in Pass 2; their buttons show a tasteful "not yet
-> enabled" state until then, and the core app is fully usable without them.
+> Status: design system, FSRS flashcards, live dashboard insights, a **Duolingo word-list importer**,
+> a **Markdown content-guide engine** (drop a `.md` in `src/content/`, get an interactive chapter),
+> and the **LLM pal** (suggestions / tagging / roleplay via a local Claude Code sidecar — no API cost).
+> The pal is optional: with the sidecar off, those features show a calm "not connected" state and the
+> rest of the app is unaffected. (Ollama is a documented stub for now.)
 
 ## Quickstart
 

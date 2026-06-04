@@ -24,6 +24,7 @@ import { useStore } from "@/app/store";
 import { accuracyByCategory, accuracyByTag, weaknessScore } from "@/lib/srs";
 import { suggestTags } from "@/lib/llm";
 import { guessCardType } from "@/lib/cards";
+import { usePalAdapter } from "@/features/pal/usePalAdapter";
 import { ImportDuolingo } from "./ImportDuolingo";
 import type { CardType, Flashcard, Gender } from "@/lib/types";
 import type { NewCardInput } from "@/lib/storage";
@@ -308,9 +309,23 @@ function CardEditor({
   const set = <K extends keyof NewCardInput>(k: K, v: NewCardInput[K]) =>
     setForm((f) => ({ ...f, [k]: v }));
   const [tagInput, setTagInput] = useState("");
+  const { settings } = useStore();
+  const { adapter } = usePalAdapter(settings.palBackend);
+  const [suggesting, setSuggesting] = useState(false);
 
-  const suggest = () => {
-    const s = suggestTags({ front: form.front, back: form.back, type: form.type });
+  const suggest = async () => {
+    const input = { front: form.front, back: form.back, type: form.type };
+    let s = suggestTags(input); // deterministic fallback / default
+    if (adapter) {
+      setSuggesting(true);
+      try {
+        s = await adapter.tagCard(input);
+      } catch {
+        // keep the deterministic result
+      } finally {
+        setSuggesting(false);
+      }
+    }
     const merged = [...new Set([...(form.tags ?? []), ...s.tags])];
     setForm((f) => ({ ...f, tags: merged, category: f.category || s.category || DEFAULT_CATEGORIES[0] }));
   };
@@ -388,7 +403,7 @@ function CardEditor({
                   <Chip key={t} tone="accent" onClick={() => set("tags", (form.tags ?? []).filter((x) => x !== t))} icon="x">{t}</Chip>
                 ))}
               </div>
-              <Button variant="ghost" size="sm" icon="sparkle" onClick={suggest} title="Suggest tags">Suggest</Button>
+              <Button variant="ghost" size="sm" icon="sparkle" onClick={suggest} disabled={suggesting || !form.front.trim()} title="Suggest tags">{suggesting ? "Thinking…" : "Suggest"}</Button>
             </div>
             <Input
               placeholder="add a tag, press Enter"

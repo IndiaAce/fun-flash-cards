@@ -6,20 +6,29 @@
    OllamaAdapter here — feature code won't change.
    ============================================================ */
 
+import type { PalBackend } from "@/lib/types";
 import type { LLMAdapter } from "./types";
+import { claudeCodeAdapter } from "./claude-code";
+import { ollamaAdapter } from "./ollama";
 
 export * from "./types";
 export { suggestTags } from "./tagger";
+export { palHealth } from "./client";
+
+/** Registered adapters, in preference order (first reachable wins under "auto"). */
+const adapters: LLMAdapter[] = [claudeCodeAdapter, ollamaAdapter];
 
 /**
- * Active adapters, in preference order. Empty in Pass 1.
- * TODO(india): push ClaudeCodeAdapter and OllamaAdapter here in Pass 2.
+ * Resolve the active adapter, honouring a user preference:
+ *  - "off"         → null (LLM features disabled)
+ *  - "claude-code" → that adapter iff reachable
+ *  - "auto"/unset  → the first reachable adapter
+ * Returns null when nothing is reachable, so the core app stays functional.
  */
-const adapters: LLMAdapter[] = [];
-
-/** The first reachable adapter, or null if none (core app stays functional). */
-export async function getActiveAdapter(): Promise<LLMAdapter | null> {
-  for (const a of adapters) {
+export async function getActiveAdapter(prefer: PalBackend = "auto"): Promise<LLMAdapter | null> {
+  if (prefer === "off") return null;
+  const candidates = prefer === "auto" ? adapters : adapters.filter((a) => a.id === prefer);
+  for (const a of candidates) {
     try {
       if (await a.isAvailable()) return a;
     } catch {

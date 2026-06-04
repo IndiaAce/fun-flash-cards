@@ -13,9 +13,10 @@ export default defineConfig({
   },
   server: {
     port: 5173,
-    // The optional LLM sidecar (Pass 2) runs on :8787; proxy keeps the app same-origin.
+    // The optional LLM sidecar runs on :8787; this proxy keeps the app same-origin.
+    // Use a /pal-api prefix so it doesn't collide with the in-app /pal route.
     proxy: {
-      "/pal": {
+      "/pal-api": {
         target: "http://localhost:8787",
         changeOrigin: true,
       },

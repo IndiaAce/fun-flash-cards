@@ -8,6 +8,7 @@ import { useRef } from "react";
 import { Appear, Button, Eyebrow, Icon, Segmented, Surface, Toggle } from "@/components/kit";
 import { useStore } from "@/app/store";
 import { ACCENTS } from "@/app/theme";
+import { usePalAdapter } from "@/features/pal/usePalAdapter";
 import type { AccentName } from "@/lib/types";
 
 function Row({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
@@ -25,6 +26,30 @@ function Row({ label, hint, children }: { label: string; hint?: string; children
 export function SettingsPage() {
   const { settings, setSettings, exportBackup, importBackup } = useStore();
   const fileRef = useRef<HTMLInputElement>(null);
+  const { status: palStatus, adapter: palAdapter } = usePalAdapter(settings.palBackend);
+
+  const palLabel =
+    settings.palBackend === "off"
+      ? "Off"
+      : palStatus === "checking"
+        ? "Checking…"
+        : palStatus === "ready"
+          ? `Connected · ${palAdapter?.label ?? ""}`
+          : "Not connected";
+  const palDot =
+    settings.palBackend === "off"
+      ? "var(--ink-4)"
+      : palStatus === "ready"
+        ? "var(--got)"
+        : palStatus === "checking"
+          ? "var(--warm)"
+          : "var(--miss)";
+  const palHint =
+    palStatus === "ready"
+      ? "The pal is ready."
+      : settings.palBackend === "off"
+        ? "LLM features are disabled."
+        : "Start the bridge with `npm run sidecar` (and make sure you're logged into Claude Code). See docs/LLM.md.";
 
   const onPickFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -121,6 +146,29 @@ export function SettingsPage() {
       </Appear>
 
       <Appear delay={180}>
+        <Surface elevation="sm" style={{ marginTop: 18 }}>
+          <Eyebrow style={{ marginBottom: 4 }}>Study pal</Eyebrow>
+          <Row label="LLM backend" hint="Powers card suggestions, smart tagging, and roleplay. Runs locally through Claude Code — no API cost.">
+            <Segmented
+              options={[
+                { value: "auto", label: "Auto" },
+                { value: "claude-code", label: "Claude Code" },
+                { value: "off", label: "Off" },
+              ]}
+              value={settings.palBackend}
+              onChange={(v) => setSettings({ palBackend: v })}
+            />
+          </Row>
+          <Row label="Status" hint={palHint}>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: "var(--text-sm)", color: "var(--ink-2)", fontWeight: 540 }}>
+              <span style={{ width: 8, height: 8, borderRadius: 999, background: palDot }} />
+              {palLabel}
+            </span>
+          </Row>
+        </Surface>
+      </Appear>
+
+      <Appear delay={220}>
         <Surface elevation="sm" style={{ marginTop: 18 }}>
           <Eyebrow style={{ marginBottom: 4 }}>Your data</Eyebrow>
           <Row label="Backup" hint="Everything lives in your browser. Export to JSON to keep it in git or move machines.">

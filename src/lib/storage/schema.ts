@@ -16,6 +16,7 @@ export const DEFAULT_SETTINGS: Settings = {
   accent: "Calm blue",
   revealStyle: "inplace",
   gradeStyle: "pills",
+  palBackend: "auto",
 };
 
 /**
