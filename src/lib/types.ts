@@ -65,84 +65,6 @@ export interface ReviewLogEntry {
   tags: string[];
 }
 
-/* ---------- Cheat sheets (data-driven) ---------- */
-
-export interface VerbGroup {
-  id: string;
-  label: string;
-  note: string;
-}
-
-export interface ConjugatedVerb {
-  id: string;
-  inf: string;
-  gloss: string;
-  group: string; // matches a VerbGroup.id
-  /** [pronoun, conjugation] rows. Curated for now; an engine can fill these later. */
-  table: Array<[string, string]>;
-}
-
-export interface TriggerItem {
-  t: string; // the trigger expression, e.g. "bien que"
-  g: string; // gloss, e.g. "although"
-}
-
-export interface TriggerColumn {
-  title: string;
-  items: TriggerItem[];
-}
-
-export interface ScenePhrase {
-  fr: string;
-  en: string;
-}
-
-export interface Scene {
-  id: string;
-  scene: string; // display name, e.g. "Hôtel"
-  icon: string; // icon name from the kit
-  phrases: ScenePhrase[];
-}
-
-export interface QuizItem {
-  prompt: string; // contains "___" for the blank
-  options: string[];
-  answer: number; // index into options
-  why: string;
-}
-
-/** A callout note rendered in the Formation tab (rules, traps, nuances). */
-export interface RuleNote {
-  kind: "recipe" | "endings" | "callout" | "trap";
-  title: string;
-  /** Plain-text/markdown-ish body. Recipe/endings carry structured data instead. */
-  body?: string;
-  /** For "recipe": ordered steps. */
-  steps?: Array<{ text: string; ex: string }>;
-  /** For "endings": [pronoun, ending] rows. */
-  rows?: Array<[string, string]>;
-}
-
-export type CheatSheetSection =
-  | { kind: "formation"; notes: RuleNote[] }
-  | { kind: "conjugator"; groups: VerbGroup[]; verbs: ConjugatedVerb[] }
-  | { kind: "triggers"; left: TriggerColumn; right: TriggerColumn; footnote?: string }
-  | { kind: "phrases"; scenes: Scene[] }
-  | { kind: "quiz"; items: QuizItem[] };
-
-export interface CheatSheet {
-  id: string;
-  /** Eyebrow label, e.g. "Cheat sheet · Mood". */
-  eyebrow: string;
-  /** Main title; the highlighted span is wrapped in {{ }} in the source. */
-  title: string;
-  /** Short intro paragraph. */
-  intro: string;
-  /** Default tags applied to cards sent from this sheet. */
-  defaultTags: string[];
-  sections: CheatSheetSection[];
-}
-
 /* ---------- Settings ---------- */
 
 export type ThemeName = "light" | "dark";
@@ -163,7 +85,7 @@ export interface PersistedState {
   schemaVersion: number;
   cards: Flashcard[];
   reviewLog: ReviewLogEntry[];
-  /** User-authored cheat sheets layered on top of the built-in ones. */
-  customCheatSheets: CheatSheet[];
+  /** Reserved for user-authored guides/content layered on top of the built-ins. */
+  customCheatSheets: unknown[];
   settings: Settings;
 }

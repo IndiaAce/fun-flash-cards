@@ -16,7 +16,6 @@ import {
   type ReactNode,
 } from "react";
 import type {
-  CheatSheet,
   Flashcard,
   GradeId,
   PersistedState,
@@ -32,7 +31,6 @@ import {
   type NewCardInput,
 } from "@/lib/storage";
 import { applyGrade, isLapse } from "@/lib/srs";
-import { BUILTIN_CHEATSHEETS } from "@/data/subjonctif";
 
 export interface BulkResult {
   added: number;
@@ -43,8 +41,6 @@ interface StoreValue {
   cards: Flashcard[];
   reviewLog: ReviewLogEntry[];
   settings: Settings;
-  /** Built-in sheets plus any the user authored. */
-  cheatSheets: CheatSheet[];
 
   addCard: (input: NewCardInput) => void;
   updateCard: (id: string, patch: Partial<Flashcard>) => void;
@@ -126,17 +122,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setState(imported);
   }, []);
 
-  const cheatSheets = useMemo(
-    () => [...BUILTIN_CHEATSHEETS, ...state.customCheatSheets],
-    [state.customCheatSheets],
-  );
-
   const value: StoreValue = useMemo(
     () => ({
       cards: state.cards,
       reviewLog: state.reviewLog,
       settings: state.settings,
-      cheatSheets,
       addCard,
       updateCard,
       removeCard,
@@ -146,7 +136,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       exportBackup,
       importBackup,
     }),
-    [state, cheatSheets, addCard, updateCard, removeCard, bulkAdd, gradeCard, setSettings, exportBackup, importBackup],
+    [state, addCard, updateCard, removeCard, bulkAdd, gradeCard, setSettings, exportBackup, importBackup],
   );
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;

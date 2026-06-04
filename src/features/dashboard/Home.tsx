@@ -111,7 +111,7 @@ export function Home() {
                 </p>
                 <p style={{ margin: "10px 0 0", fontSize: "var(--text-sm)", color: "var(--ink-2)", lineHeight: 1.55 }}>{insight.detail}</p>
                 <div style={{ marginTop: 16, display: "flex", gap: 10 }}>
-                  <Button variant="quiet" size="sm" onClick={() => navigate("/cheatsheets/subjonctif-present")}>Open the cheat sheet</Button>
+                  <Button variant="quiet" size="sm" onClick={() => navigate("/guides/subjonctif-present")}>Open the guide</Button>
                   {insightCard && (
                     <Button
                       variant="ghost"

@@ -25,3 +25,13 @@ export function detectGender(front: string): Gender | undefined {
   if (/^(la|une|de\s+la)\s/.test(f)) return "f";
   return undefined; // l', les, des, or no article
 }
+
+/** A tidy ascii slug for tags/ids: "À l'hôtel" → "a-l-hotel". */
+export function slugify(s: string): string {
+  return s
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}

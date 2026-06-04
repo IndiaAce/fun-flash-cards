@@ -1,14 +1,15 @@
 # Compagnon
 
-A local-first French learning pal — spaced-repetition **flashcards** and data-driven **verb
-cheat sheets**, sharing one calm, Apple-clean design system. Everything runs on your machine;
-your corpus lives in the browser and exports to JSON for git backup. An optional LLM "pal" layer
-(Claude Code or local Ollama) adds card suggestions and roleplay — see [Pass 2](#pass-2--the-llm-pal).
+A local-first French learning pal — spaced-repetition **flashcards** and Markdown-authored,
+interactive **grammar guides**, sharing one calm, Apple-clean design system. Everything runs on your
+machine; your corpus lives in the browser and exports to JSON for git backup. An optional LLM "pal"
+layer (Claude Code or local Ollama) adds card suggestions and roleplay — see [Pass 2](#pass-2--the-llm-pal).
 
-> Status: **Pass 1 (the showcase)** is complete — design system, app shell, storage with
-> export/import, the subjonctif cheat-sheet engine, flashcards + FSRS scheduling, and live
-> dashboard insights. The LLM adapters, sidecar, and roleplay land in Pass 2; their buttons show a
-> tasteful "not yet enabled" state until then, and the core app is fully usable without them.
+> Status: the showcase is complete — design system, app shell, storage with export/import,
+> FSRS flashcards, live dashboard insights, a **Duolingo word-list importer**, and a
+> **Markdown content-guide engine** (drop a `.md` in `src/content/`, get an interactive chapter).
+> The LLM adapters, sidecar, and roleplay land in Pass 2; their buttons show a tasteful "not yet
+> enabled" state until then, and the core app is fully usable without them.
 
 ## Quickstart
 
@@ -18,8 +19,16 @@ npm run dev          # http://localhost:5173
 ```
 
 On first run the app seeds a living starter corpus (survival phrases tagged `voyage`, a spread of
-vocabulary, and a little review history so the dashboard insight has something to say) plus the
-built-in **subjonctif** cheat sheet.
+vocabulary, and a little review history so the dashboard insight has something to say). The
+**subjonctif** guide ships as Markdown in `src/content/`.
+
+### Importing your own words
+
+- **Corpus → Duolingo** imports a copied Duolingo word list (French/English on alternating lines,
+  blank line between entries). Tagged `duolingo` + auto-tags, deduped.
+- **Corpus → Bulk add** pastes a `front | back` list.
+- **Guides** are Markdown chapters in `src/content/` — see [`docs/CONTENT.md`](docs/CONTENT.md) to
+  author a new one (or have Claude Web generate one to that spec from a textbook chapter).
 
 ### Scripts
 
@@ -50,18 +59,22 @@ src/
   components/kit.tsx        Shared component kit (Button, Chip, Surface, Tabs, …)
   lib/
     types.ts               Core data models (the contract across the app)
+    cards.ts               Card heuristics (type guess, gender, slug)
     storage/               Versioned localStorage wrapper + migrations + export/import
     srs/                   FSRS scheduling, due-queue, weak-spot analytics, insight
+    import/duolingo.ts     Duolingo word-list parser → cards
+    content/               Guide Markdown parser, registry, and renderer plumbing
     llm/                   LLMAdapter interface + deterministic tagger (adapters: Pass 2)
-  data/                    Seed corpus + the subjonctif cheat sheet
+  content/                 The Markdown grammar guides (e.g. subjonctif.md)
+  data/                    First-run seed corpus
   app/                     Store (React context), router, shell, theme
   features/
     dashboard/             Home: due today + insight + pal entry
-    flashcards/            Review session, corpus browser, editor, bulk add
-    cheatsheets/           Data-driven cheat-sheet engine
+    flashcards/            Review session, corpus browser, editor, bulk + Duolingo import
+    guides/                Markdown guide renderer + interactive widgets
     pal/                   Study pal (Pass 2; disabled state for now)
     settings/              Preferences + data export/import
-docs/                      SRS.md, CHEATSHEETS.md, LLM.md
+docs/                      SRS.md, CONTENT.md, LLM.md
 sidecar/                   Node bridge for the Claude Code adapter (Pass 2)
 ```
 
@@ -76,11 +89,12 @@ IndexedDB later touches only `src/lib/storage`. The shapes (full definitions in
   `chien` and `un chien` are intentionally distinct cards (the article matters).
 - **`ReviewLogEntry`** — one row per grade, denormalising the card's category/tags so the
   weak-spot analytics and dashboard insight are cheap to compute.
-- **`CheatSheet`** — a sheet is *data*: an array of typed sections
-  (`formation | conjugator | triggers | phrases | quiz`). A new sheet is a new data file — see
-  [`docs/CHEATSHEETS.md`](docs/CHEATSHEETS.md).
+- **`Guide`** — an interactive grammar chapter authored in **Markdown** (`src/content/*.md`): prose +
+  `:::note`/`:::trap` callouts + fenced JSON widgets (`conjugator | triggers | phrases | quiz`). Drop a
+  `.md` in and it appears at `/guides/<id>` with no code changes — authoring spec in
+  [`docs/CONTENT.md`](docs/CONTENT.md). (Guides are static content, not part of the persisted corpus.)
 - **`Settings`** — theme, accent, reveal style, grade-control style.
-- **`PersistedState`** — `{ schemaVersion, cards, reviewLog, customCheatSheets, settings }`, with a
+- **`PersistedState`** — `{ schemaVersion, cards, reviewLog, settings }` (+ a reserved field), with a
   `migrate()` hook (`src/lib/storage/schema.ts`) that walks old payloads up to the current version.
 
 ### Backups

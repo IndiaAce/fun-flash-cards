@@ -12,8 +12,8 @@ import { Home } from "@/features/dashboard/Home";
 import { ReviewLanding } from "@/features/flashcards/ReviewLanding";
 import { ReviewRun } from "@/features/flashcards/ReviewRun";
 import { Corpus } from "@/features/flashcards/Corpus";
-import { CheatSheetsIndex } from "@/features/cheatsheets/CheatSheetsIndex";
-import { CheatSheetPage } from "@/features/cheatsheets/CheatSheetPage";
+import { GuidesIndex } from "@/features/guides/GuidesIndex";
+import { GuidePage } from "@/features/guides/GuidePage";
 import { Pal } from "@/features/pal/Pal";
 import { SettingsPage } from "@/features/settings/SettingsPage";
 
@@ -26,8 +26,8 @@ export function App() {
             <Route path="/" element={<Home />} />
             <Route path="/review" element={<ReviewLanding />} />
             <Route path="/corpus" element={<Corpus />} />
-            <Route path="/cheatsheets" element={<CheatSheetsIndex />} />
-            <Route path="/cheatsheets/:id" element={<CheatSheetPage />} />
+            <Route path="/guides" element={<GuidesIndex />} />
+            <Route path="/guides/:id" element={<GuidePage />} />
             <Route path="/pal" element={<Pal />} />
             <Route path="/settings" element={<SettingsPage />} />
           </Route>

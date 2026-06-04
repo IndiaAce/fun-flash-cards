@@ -45,5 +45,5 @@ coverage/
 compagnon-backup-*.json
 
 # User scratch / explicitly-not-for-commit material
-/for_clode_DO-NOT-COMMIT/
+/for_claude*DO-NOT-COMMIT/
 /scratchpad.md

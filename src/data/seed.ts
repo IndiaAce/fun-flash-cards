@@ -9,7 +9,6 @@
 import type { Flashcard, PersistedState, ReviewLogEntry } from "@/lib/types";
 import { freshSrsState } from "@/lib/srs";
 import { DEFAULT_SETTINGS, SCHEMA_VERSION } from "@/lib/storage/schema";
-import { SUBJONCTIF } from "./subjonctif";
 
 type SeedCard = Omit<Flashcard, "id" | "createdAt" | "srs">;
 
@@ -85,5 +84,3 @@ export function buildSeedState(): PersistedState {
     settings: { ...DEFAULT_SETTINGS },
   };
 }
-
-export { SUBJONCTIF };
