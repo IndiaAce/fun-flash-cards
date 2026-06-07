@@ -92,11 +92,16 @@ export interface QueueFilter {
   newOnly?: boolean;
   /** When false, include not-yet-due cards too (free practice). */
   dueOnly?: boolean;
+  /** Shuffle cards of comparable weakness (default true). */
+  shuffle?: boolean;
 }
 
 /**
- * Build a review queue. Due cards come first, ordered by weakness then by how
- * overdue they are, so the hardest, most-overdue material surfaces first.
+ * Build a review queue. The weakest material still surfaces first, but cards of
+ * comparable weakness are shuffled, so a session isn't the same order every
+ * time. We bucket weakness into coarse bands (so "hardest first" is preserved)
+ * and randomise within each band — which means a set of equally-new cards is
+ * fully shuffled. Set `filter.shuffle = false` for the old stable ordering.
  */
 export function buildQueue(
   cards: Flashcard[],
@@ -104,7 +109,7 @@ export function buildQueue(
   filter: QueueFilter = {},
   now: Date = new Date(),
 ): Flashcard[] {
-  const { type, tag, category, deck, newOnly, dueOnly = true } = filter;
+  const { type, tag, category, deck, newOnly, dueOnly = true, shuffle = true } = filter;
   const catStats = accuracyByCategory(log);
   const tagStats = accuracyByTag(log);
 
@@ -123,10 +128,14 @@ export function buildQueue(
       card: c,
       weak: weaknessScore(c, catStats, tagStats),
       overdueMs: now.getTime() - new Date(c.srs.due).getTime(),
+      rand: Math.random(),
     }))
     .sort((a, b) => {
-      if (Math.abs(b.weak - a.weak) > 0.05) return b.weak - a.weak;
-      return b.overdueMs - a.overdueMs;
+      // Weakest first, in ~0.1-wide bands so close scores are interchangeable.
+      const band = Math.round(b.weak * 10) - Math.round(a.weak * 10);
+      if (band !== 0) return band;
+      // Within a band: shuffle (default) or fall back to most-overdue-first.
+      return shuffle ? a.rand - b.rand : b.overdueMs - a.overdueMs;
     })
     .map((x) => x.card);
 }

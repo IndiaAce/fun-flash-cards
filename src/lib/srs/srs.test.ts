@@ -82,6 +82,22 @@ describe("buildQueue", () => {
     expect(q.map((c) => c.id)).toEqual(["class"]);
   });
 
+  it("shuffles by default but keeps the whole set", () => {
+    const cards = Array.from({ length: 12 }, (_, i) => card(`c${i}`));
+    const q = buildQueue(cards, [], { dueOnly: false });
+    expect(new Set(q.map((c) => c.id))).toEqual(new Set(cards.map((c) => c.id)));
+    expect(q).toHaveLength(12);
+  });
+
+  it("shuffle:false restores stable, most-overdue-first ordering", () => {
+    const older = card("older");
+    older.srs.due = new Date(Date.now() - 2 * 86_400_000);
+    const newer = card("newer");
+    newer.srs.due = new Date(Date.now() - 1 * 86_400_000);
+    const q = buildQueue([newer, older], [], { shuffle: false });
+    expect(q.map((c) => c.id)).toEqual(["older", "newer"]);
+  });
+
   it("newOnly keeps only never-reviewed cards", () => {
     const fresh = card("fresh");
     const studied = card("studied");
