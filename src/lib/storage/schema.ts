@@ -9,7 +9,7 @@
 import type { PersistedState, Settings } from "@/lib/types";
 
 export const STORAGE_KEY = "compagnon";
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 
 export const DEFAULT_SETTINGS: Settings = {
   theme: "light",
@@ -25,8 +25,22 @@ export const DEFAULT_SETTINGS: Settings = {
  * never edit a shipped one. (TODO(india): first real migration goes here.)
  */
 export const MIGRATIONS: Array<{ from: number; up: (raw: any) => any }> = [
-  // Example (kept as a template, not active):
-  // { from: 1, up: (raw) => ({ ...raw, schemaVersion: 2, newField: [] }) },
+  // v1 → v2: give every card a `source` so it lands in a deck.
+  // Cards that already have one keep it. The rest are split by a reliable
+  // signal: hand-added cards have empty tags → "Class"; the curated starter
+  // set always carries tags (A2/B2/voyage…) → "Compagnon".
+  {
+    from: 1,
+    up: (raw) => ({
+      ...raw,
+      schemaVersion: 2,
+      cards: (Array.isArray(raw.cards) ? raw.cards : []).map((c: any) => {
+        if (c.source) return c;
+        const tagged = Array.isArray(c.tags) && c.tags.length > 0;
+        return { ...c, source: tagged ? "Compagnon" : "Class" };
+      }),
+    }),
+  },
 ];
 
 /**

@@ -24,6 +24,7 @@ import { useStore } from "@/app/store";
 import { accuracyByCategory, accuracyByTag, weaknessScore } from "@/lib/srs";
 import { suggestTags } from "@/lib/llm";
 import { guessCardType } from "@/lib/cards";
+import { CLASS_SOURCE } from "@/lib/decks";
 import { usePalAdapter } from "@/features/pal/usePalAdapter";
 import { ImportDuolingo } from "./ImportDuolingo";
 import type { CardType, Flashcard, Gender } from "@/lib/types";
@@ -261,8 +262,9 @@ export function Corpus() {
           card={editing === "new" ? null : editing}
           onClose={() => setEditing(null)}
           onSave={(input, id) => {
+            // New cards you add by hand are your "Class" deck (high fidelity).
             if (id) updateCard(id, input);
-            else addCard(input);
+            else addCard({ ...input, source: CLASS_SOURCE });
             setEditing(null);
           }}
           onDelete={(id) => {
@@ -455,7 +457,7 @@ function parseLines(text: string): NewCardInput[] {
     if (!front) continue;
     const type = guessCardType(front);
     const s = suggestTags({ front, back, type });
-    out.push({ type, front, back, tags: s.tags, category: s.category });
+    out.push({ type, front, back, tags: s.tags, category: s.category, source: CLASS_SOURCE });
   }
   return out;
 }

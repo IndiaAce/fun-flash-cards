@@ -5,7 +5,8 @@
   "type": "module",
   "description": "Compagnon — a local-first French learning pal (flashcards + verb cheat sheets).",
   "scripts": {
-    "dev": "vite",
+    "dev": "node scripts/dev.mjs",
+    "dev:web": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",

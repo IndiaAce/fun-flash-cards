@@ -27,6 +27,19 @@ describe("migrate", () => {
     expect(out.settings.theme).toBe("light");
   });
 
+  it("v1→v2 backfills a deck source: empty-tag cards are Class, tagged are Compagnon", () => {
+    const out = migrate({
+      schemaVersion: 1,
+      cards: [
+        { id: "hand", type: "word", front: "agaçant", back: "annoying", tags: [], srs: {} },
+        { id: "seed", type: "word", front: "la lueur", back: "glimmer", tags: ["B2"], srs: {} },
+        { id: "duo", type: "word", front: "chat", back: "cat", tags: ["duolingo"], source: "Duolingo", srs: {} },
+      ],
+    });
+    const bySrc = Object.fromEntries(out.cards.map((c) => [c.id, c.source]));
+    expect(bySrc).toEqual({ hand: "Class", seed: "Compagnon", duo: "Duolingo" });
+  });
+
   it("survives a JSON round-trip", () => {
     const state = repo.addCard(emptyState(), word("le chien"));
     const restored = migrate(JSON.parse(JSON.stringify(state)));

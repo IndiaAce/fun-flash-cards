@@ -28,6 +28,7 @@ import {
   repo,
   downloadBackup,
   importJSON,
+  scheduleBackup,
   type NewCardInput,
 } from "@/lib/storage";
 import { applyGrade, isLapse } from "@/lib/srs";
@@ -69,6 +70,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       return;
     }
     saveState(state);
+    // Best-effort durable copy to disk via the sidecar (debounced, silent).
+    scheduleBackup(state);
   }, [state]);
 
   const addCard = useCallback((input: NewCardInput) => {

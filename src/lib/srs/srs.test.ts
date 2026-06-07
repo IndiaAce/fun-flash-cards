@@ -73,6 +73,22 @@ describe("buildQueue", () => {
     const q = buildQueue([w, s], [], { type: "word", dueOnly: false });
     expect(q.map((c) => c.id)).toEqual(["w"]);
   });
+
+  it("filters by deck (derived from source)", () => {
+    const klass = card("class", { source: "Class" });
+    const duo = card("duo", { source: "Duolingo" });
+    const seed = card("seed", { source: "Compagnon" });
+    const q = buildQueue([klass, duo, seed], [], { deck: "Class" });
+    expect(q.map((c) => c.id)).toEqual(["class"]);
+  });
+
+  it("newOnly keeps only never-reviewed cards", () => {
+    const fresh = card("fresh");
+    const studied = card("studied");
+    studied.srs.reps = 3; // has been reviewed
+    const q = buildQueue([fresh, studied], [], { newOnly: true, dueOnly: false });
+    expect(q.map((c) => c.id)).toEqual(["fresh"]);
+  });
 });
 
 describe("generateInsight", () => {

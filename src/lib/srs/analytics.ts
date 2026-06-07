@@ -9,6 +9,7 @@
 
 import type { Flashcard, ReviewLogEntry } from "@/lib/types";
 import { isDue } from "./fsrs";
+import { deckOf } from "@/lib/decks";
 
 /* ---------- Performance aggregation ---------- */
 
@@ -85,6 +86,10 @@ export interface QueueFilter {
   type?: Flashcard["type"];
   tag?: string;
   category?: string;
+  /** Restrict to one deck ("Class" / "Duolingo" / "Compagnon"). */
+  deck?: string;
+  /** Only never-reviewed cards (fresh vocab you haven't studied yet). */
+  newOnly?: boolean;
   /** When false, include not-yet-due cards too (free practice). */
   dueOnly?: boolean;
 }
@@ -99,7 +104,7 @@ export function buildQueue(
   filter: QueueFilter = {},
   now: Date = new Date(),
 ): Flashcard[] {
-  const { type, tag, category, dueOnly = true } = filter;
+  const { type, tag, category, deck, newOnly, dueOnly = true } = filter;
   const catStats = accuracyByCategory(log);
   const tagStats = accuracyByTag(log);
 
@@ -107,6 +112,8 @@ export function buildQueue(
     if (type && c.type !== type) return false;
     if (category && c.category !== category) return false;
     if (tag && !c.tags.includes(tag)) return false;
+    if (deck && deckOf(c) !== deck) return false;
+    if (newOnly && c.srs.reps > 0) return false;
     if (dueOnly && !isDue(c.srs, now)) return false;
     return true;
   });

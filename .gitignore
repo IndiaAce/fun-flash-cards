@@ -43,6 +43,7 @@ coverage/
 # Personal corpus / import data and backups (use the app's Export instead)
 /words.txt
 compagnon-backup-*.json
+/backups/
 
 # User scratch / explicitly-not-for-commit material
 /for_claude*DO-NOT-COMMIT/

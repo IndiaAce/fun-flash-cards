@@ -181,3 +181,4 @@ export const repo = {
 };
 
 export { STORAGE_KEY, SCHEMA_VERSION } from "./schema";
+export { scheduleBackup, onBackupStatus, getBackupStatus, type BackupStatus } from "./autobackup";
