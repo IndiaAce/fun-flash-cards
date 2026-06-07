@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { parseGuide, plainTitle, GuideParseError } from "./parse";
-import type { ConjugatorData, QuizItem } from "./types";
+import type { ConjugatorData, FlashcardsData, QuizItem } from "./types";
 
 const GUIDE = `---
 id: subjonctif-present
@@ -33,6 +33,12 @@ nous / vous look like the imperfect.
 \`\`\`quiz
 [{ "prompt": "Il faut que tu ___.", "options": ["es","sois"], "answer": 1, "why": "subjonctif" }]
 \`\`\`
+
+## Cartes
+
+\`\`\`flashcards
+{ "cards": [{ "front": "il faut que", "back": "Subjonctif", "note": "obligation", "tag": "mode" }] }
+\`\`\`
 `;
 
 describe("parseGuide", () => {
@@ -47,7 +53,7 @@ describe("parseGuide", () => {
 
   it("splits prose, callouts, and widgets in order", () => {
     const kinds = guide.blocks.map((b) => b.kind);
-    expect(kinds).toEqual(["prose", "note", "trap", "conjugator", "prose", "quiz"]);
+    expect(kinds).toEqual(["prose", "note", "trap", "conjugator", "prose", "quiz", "prose", "flashcards"]);
   });
 
   it("keeps callout titles and inner markdown", () => {
@@ -63,6 +69,9 @@ describe("parseGuide", () => {
     expect(conj.data.verbs[0]!.inf).toBe("être");
     const quiz = guide.blocks.find((b) => b.kind === "quiz")! as { data: QuizItem[] };
     expect(quiz.data[0]!.answer).toBe(1);
+    const cards = guide.blocks.find((b) => b.kind === "flashcards")! as { data: FlashcardsData };
+    expect(cards.data.cards[0]!.back).toBe("Subjonctif");
+    expect(cards.data.cards[0]!.tag).toBe("mode");
   });
 
   it("strips {{ }} for plain titles", () => {

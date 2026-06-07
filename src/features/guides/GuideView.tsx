@@ -14,6 +14,7 @@ import { Conjugator } from "./widgets/Conjugator";
 import { TriggerColumns } from "./widgets/TriggerColumns";
 import { Phrases } from "./widgets/Phrases";
 import { Quiz } from "./widgets/Quiz";
+import { Flashcards } from "./widgets/Flashcards";
 import { Callout } from "./widgets/Callout";
 
 interface Heading {
@@ -134,6 +135,8 @@ export function GuideView({ guide }: { guide: Guide }) {
                 return <Phrases key={i} data={b.data} guideId={frontmatter.id} tags={frontmatter.tags} />;
               case "quiz":
                 return <Quiz key={i} items={b.data} />;
+              case "flashcards":
+                return <Flashcards key={i} data={b.data} />;
             }
           })}
         </div>

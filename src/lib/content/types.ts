@@ -85,6 +85,23 @@ export interface QuizItem {
   why: string;
 }
 
+export interface FlashcardItem {
+  /** The prompt shown first (a trigger, a verb cue, a sentence to judge…). */
+  front: string;
+  /** The answer revealed on flip (the mood, the form, the tense…). */
+  back: string;
+  /** Optional one-line explanation shown under the answer. */
+  note?: string;
+  /** Optional facet chip for filtering, e.g. "mode", "conjugaison", "temps", "piège". */
+  tag?: string;
+}
+
+export interface FlashcardsData {
+  cards: FlashcardItem[];
+  /** Optional lead-in line shown above the deck. */
+  intro?: string;
+}
+
 /* ---------- Blocks & guide ---------- */
 
 export type GuideBlock =
@@ -94,7 +111,8 @@ export type GuideBlock =
   | { kind: "conjugator"; data: ConjugatorData }
   | { kind: "triggers"; data: TriggersData }
   | { kind: "phrases"; data: PhrasesData }
-  | { kind: "quiz"; data: QuizItem[] };
+  | { kind: "quiz"; data: QuizItem[] }
+  | { kind: "flashcards"; data: FlashcardsData };
 
 export interface GuideFrontmatter {
   id: string;
@@ -111,4 +129,4 @@ export interface Guide {
   blocks: GuideBlock[];
 }
 
-export type WidgetKind = "conjugator" | "triggers" | "phrases" | "quiz";
+export type WidgetKind = "conjugator" | "triggers" | "phrases" | "quiz" | "flashcards";

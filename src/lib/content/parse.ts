@@ -14,7 +14,7 @@ import type {
   WidgetKind,
 } from "./types";
 
-const WIDGET_KINDS: WidgetKind[] = ["conjugator", "triggers", "phrases", "quiz"];
+const WIDGET_KINDS: WidgetKind[] = ["conjugator", "triggers", "phrases", "quiz", "flashcards"];
 
 export class GuideParseError extends Error {}
 
@@ -127,6 +127,8 @@ function makeWidgetBlock(kind: WidgetKind, json: string): GuideBlock {
       return { kind: "phrases", data: data as never };
     case "quiz":
       return { kind: "quiz", data: data as never };
+    case "flashcards":
+      return { kind: "flashcards", data: data as never };
   }
 }
 

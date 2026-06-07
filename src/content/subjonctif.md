@@ -135,6 +135,38 @@ not the meaning.
 }
 ```
 
+## Cartes
+
+Retourne chaque carte : le déclencheur ou le verbe devant — le **mode**, la **forme** ou
+le **temps** derrière. Filtre par thème, mélange, recommence.
+
+```flashcards
+{
+  "intro": "Subjonctif ou indicatif ? Quelle forme ? Présent ou passé ? Retourne pour vérifier.",
+  "cards": [
+    { "front": "il faut que", "back": "Subjonctif", "note": "Obligation → subjonctif. « Il faut que tu viennes. »", "tag": "mode" },
+    { "front": "j'espère que", "back": "Indicatif", "note": "Le grand piège : espérer prend l'indicatif. « J'espère qu'il fera beau. »", "tag": "piège" },
+    { "front": "bien que / quoique", "back": "Subjonctif", "note": "Concession → toujours le subjonctif. « Bien qu'il soit tard… »", "tag": "mode" },
+    { "front": "je ne pense pas que", "back": "Subjonctif", "note": "Penser / croire au négatif ou en question → subjonctif. À l'affirmatif → indicatif.", "tag": "mode" },
+    { "front": "il est évident / certain que", "back": "Indicatif", "note": "Certitude, constat → indicatif. « Il est évident qu'il est fatigué. »", "tag": "mode" },
+    { "front": "avant que … / après que …", "back": "avant que → subjonctif · après que → indicatif", "note": "« Avant qu'il parte » mais « après qu'il est parti » : l'action réelle reste à l'indicatif.", "tag": "piège" },
+    { "front": "je veux / j'aimerais que", "back": "Subjonctif", "note": "Désir, volonté → subjonctif. « J'aimerais que vous veniez. »", "tag": "mode" },
+    { "front": "il est probable que … / il est possible que …", "back": "probable → indicatif · possible → subjonctif", "note": "Plus de 50 % de certitude → indicatif ; le simple possible → subjonctif.", "tag": "mode" },
+
+    { "front": "être — que je…", "back": "que je sois", "note": "sois · sois · soit · soyons · soyez · soient. À savoir par cœur.", "tag": "conjugaison" },
+    { "front": "avoir — qu'il…", "back": "qu'il ait", "note": "aie · aies · ait · ayons · ayez · aient. Sert aussi à former le subjonctif passé.", "tag": "conjugaison" },
+    { "front": "faire — quel radical ?", "back": "fass- partout", "note": "que je fasse … qu'ils fassent. Un seul radical — facile une fois mémorisé.", "tag": "conjugaison" },
+    { "front": "pouvoir — quel radical ?", "back": "puiss- partout", "note": "« Pensez-vous qu'on puisse entrer sans réserver ? »", "tag": "conjugaison" },
+    { "front": "boire — que nous… ? (le pied change)", "back": "que nous buvions", "note": "Deux radicaux : qu'il boive mais que nous buvions. Idem prendre, venir, voir.", "tag": "conjugaison" },
+    { "front": "parler — nous / vous ?", "back": "que nous parlions · que vous parliez", "note": "-er régulier : comme le présent, sauf nous / vous en -ions / -iez.", "tag": "conjugaison" },
+
+    { "front": "Présent ou passé ? « Il faut qu'il ___ là demain. » (être)", "back": "soit — présent", "note": "Action simultanée ou à venir → subjonctif présent.", "tag": "temps" },
+    { "front": "Présent ou passé ? « Je regrette qu'il ___ hier. » (partir)", "back": "soit parti — passé", "note": "Action déjà arrivée → subjonctif passé : être / avoir au subjonctif + participe passé.", "tag": "temps" },
+    { "front": "Comment former le subjonctif passé ?", "back": "avoir / être au subjonctif + participe passé", "note": "« content qu'il ait trouvé un emploi », « qu'elle soit partie ».", "tag": "temps" }
+  ]
+}
+```
+
 ## En voyage
 
 À sortir à l'hôtel, au resto, à la gare. Send any of these straight to your flashcards.
