@@ -80,6 +80,8 @@ export interface Settings {
   revealStyle: RevealStyle;
   gradeStyle: GradeStyle;
   palBackend: PalBackend;
+  /** How many cards a review session serves before finishing. 0 = all. */
+  sessionSize: number;
 }
 
 /* ---------- Persisted root ---------- */

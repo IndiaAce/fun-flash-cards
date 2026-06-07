@@ -17,6 +17,7 @@ export const DEFAULT_SETTINGS: Settings = {
   revealStyle: "inplace",
   gradeStyle: "pills",
   palBackend: "auto",
+  sessionSize: 20,
 };
 
 /**

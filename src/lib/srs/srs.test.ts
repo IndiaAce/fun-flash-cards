@@ -89,6 +89,13 @@ describe("buildQueue", () => {
     expect(q).toHaveLength(12);
   });
 
+  it("caps the session to `limit` cards", () => {
+    const cards = Array.from({ length: 30 }, (_, i) => card(`c${i}`));
+    expect(buildQueue(cards, [], { dueOnly: false, limit: 10 })).toHaveLength(10);
+    expect(buildQueue(cards, [], { dueOnly: false, limit: 0 })).toHaveLength(30);
+    expect(buildQueue(cards, [], { dueOnly: false })).toHaveLength(30);
+  });
+
   it("shuffle:false restores stable, most-overdue-first ordering", () => {
     const older = card("older");
     older.srs.due = new Date(Date.now() - 2 * 86_400_000);

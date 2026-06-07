@@ -13,14 +13,22 @@ import { useStore } from "@/app/store";
 import { buildQueue, type QueueFilter } from "@/lib/srs";
 import { DECK, deckCounts, deckOf, type Deck } from "@/lib/decks";
 
+const SESSION_SIZES: Array<{ value: number; label: string }> = [
+  { value: 10, label: "10" },
+  { value: 20, label: "20" },
+  { value: 50, label: "50" },
+  { value: 0, label: "All" },
+];
+
 export function ReviewLanding() {
-  const { cards, reviewLog } = useStore();
+  const { cards, reviewLog, settings, setSettings } = useStore();
   const navigate = useNavigate();
 
   const [deck, setDeck] = useState<Deck | "all">("all");
   const [newOnly, setNewOnly] = useState(false);
   const [category, setCategory] = useState<string | null>(null);
 
+  const sessionSize = settings.sessionSize; // 0 = all
   const counts = useMemo(() => deckCounts(cards), [cards]);
 
   // Categories present in the chosen deck, so the chips stay relevant.
@@ -53,8 +61,14 @@ export function ReviewLanding() {
   );
 
   const filtered = deck !== "all" || newOnly || category !== null;
+  // How many we'll actually serve this session (capped by the chosen size).
+  const cap = (n: number) => (sessionSize > 0 ? Math.min(sessionSize, n) : n);
+  const sessionDue = cap(dueCount);
+  const sessionAll = cap(allCount);
   const begin = (dueOnly: boolean) =>
-    navigate("/review/run", { state: { filter: { ...baseFilter, dueOnly } } });
+    navigate("/review/run", {
+      state: { filter: { ...baseFilter, dueOnly, limit: sessionSize } },
+    });
 
   const deckChips: Array<{ value: Deck | "all"; label: string }> = [
     { value: "all", label: `All decks · ${cards.length}` },
@@ -71,7 +85,7 @@ export function ReviewLanding() {
         </div>
         <p style={{ color: "var(--ink-2)", fontSize: "var(--text-md)", lineHeight: 1.55, margin: "12px auto 24px", maxWidth: 400 }}>
           {dueCount > 0
-            ? `${dueCount} card${dueCount === 1 ? "" : "s"} ${filtered ? "match this focus" : "are due"}. We'll go one at a time — reveal, rate how it felt, and move on.`
+            ? `${dueCount} card${dueCount === 1 ? "" : "s"} ${filtered ? "match this focus" : "are due"}${sessionSize > 0 && dueCount > sessionSize ? ` — we'll do ${sessionDue} now` : ""}. One at a time: reveal, rate how it felt, move on.`
             : filtered
               ? `Nothing due in this focus right now. You can still run a free practice pass over its ${allCount} card${allCount === 1 ? "" : "s"}.`
               : "Nothing is due right now. You can still run a free practice pass over your whole corpus."}
@@ -107,7 +121,7 @@ export function ReviewLanding() {
           {categories.length > 0 && (
             <>
               <Eyebrow style={{ marginBottom: 10 }}>Category</Eyebrow>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 20 }}>
                 <Chip tone={category === null ? "accent" : "neutral"} active={category === null} onClick={() => setCategory(null)}>
                   Any
                 </Chip>
@@ -119,15 +133,29 @@ export function ReviewLanding() {
               </div>
             </>
           )}
+
+          <Eyebrow style={{ marginBottom: 10 }}>Session length</Eyebrow>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            {SESSION_SIZES.map((s) => (
+              <Chip
+                key={s.value}
+                tone={sessionSize === s.value ? "accent" : "neutral"}
+                active={sessionSize === s.value}
+                onClick={() => setSettings({ sessionSize: s.value })}
+              >
+                {s.label}
+              </Chip>
+            ))}
+          </div>
         </div>
 
         {dueCount > 0 ? (
           <Button variant="primary" size="lg" iconRight="arrowRight" onClick={() => begin(true)}>
-            Begin review
+            {`Begin review · ${sessionDue}`}
           </Button>
         ) : (
           <Button variant="primary" size="lg" iconRight="arrowRight" disabled={allCount === 0} onClick={() => begin(false)}>
-            {allCount === 0 ? "No cards here" : "Practice anyway"}
+            {allCount === 0 ? "No cards here" : `Practice anyway · ${sessionAll}`}
           </Button>
         )}
       </Surface>

@@ -94,6 +94,8 @@ export interface QueueFilter {
   dueOnly?: boolean;
   /** Shuffle cards of comparable weakness (default true). */
   shuffle?: boolean;
+  /** Cap the session to this many cards (after ordering). 0/undefined = no cap. */
+  limit?: number;
 }
 
 /**
@@ -109,7 +111,7 @@ export function buildQueue(
   filter: QueueFilter = {},
   now: Date = new Date(),
 ): Flashcard[] {
-  const { type, tag, category, deck, newOnly, dueOnly = true, shuffle = true } = filter;
+  const { type, tag, category, deck, newOnly, dueOnly = true, shuffle = true, limit } = filter;
   const catStats = accuracyByCategory(log);
   const tagStats = accuracyByTag(log);
 
@@ -123,7 +125,7 @@ export function buildQueue(
     return true;
   });
 
-  return filtered
+  const ordered = filtered
     .map((c) => ({
       card: c,
       weak: weaknessScore(c, catStats, tagStats),
@@ -138,6 +140,8 @@ export function buildQueue(
       return shuffle ? a.rand - b.rand : b.overdueMs - a.overdueMs;
     })
     .map((x) => x.card);
+
+  return limit && limit > 0 ? ordered.slice(0, limit) : ordered;
 }
 
 export function dueCards(cards: Flashcard[], now: Date = new Date()): Flashcard[] {
