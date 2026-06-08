@@ -84,12 +84,31 @@ export interface Settings {
   sessionSize: number;
 }
 
+/* ---------- Corrections queue ---------- */
+
+/**
+ * A card you've missed and are still nailing down. It stays here until you
+ * get it right `GRADUATE_STREAK` times in a row *while reviewing corrections*;
+ * any miss (anywhere) drops the streak back to 0.
+ */
+export interface CorrectionEntry {
+  cardId: string;
+  /** Consecutive correct corrections-reps. Reaching the threshold graduates it. */
+  streak: number;
+  /** ISO timestamp it first entered the queue. */
+  addedAt: string;
+  /** ISO timestamp of the most recent corrections answer. */
+  lastReviewedAt?: string;
+}
+
 /* ---------- Persisted root ---------- */
 
 export interface PersistedState {
   schemaVersion: number;
   cards: Flashcard[];
   reviewLog: ReviewLogEntry[];
+  /** Cards you've missed, kept until graduated. See CorrectionEntry. */
+  corrections: CorrectionEntry[];
   /** Reserved for user-authored guides/content layered on top of the built-ins. */
   customCheatSheets: unknown[];
   settings: Settings;

@@ -96,6 +96,8 @@ export interface QueueFilter {
   shuffle?: boolean;
   /** Cap the session to this many cards (after ordering). 0/undefined = no cap. */
   limit?: number;
+  /** Build from the corrections queue instead of the due/deck queue. */
+  corrections?: boolean;
 }
 
 /**

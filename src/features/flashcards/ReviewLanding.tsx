@@ -8,7 +8,7 @@
 
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button, Chip, Eyebrow, Surface, Toggle } from "@/components/kit";
+import { Button, Chip, Eyebrow, Icon, Surface, Toggle } from "@/components/kit";
 import { useStore } from "@/app/store";
 import { buildQueue, type QueueFilter } from "@/lib/srs";
 import { DECK, deckCounts, deckOf, type Deck } from "@/lib/decks";
@@ -21,7 +21,7 @@ const SESSION_SIZES: Array<{ value: number; label: string }> = [
 ];
 
 export function ReviewLanding() {
-  const { cards, reviewLog, settings, setSettings } = useStore();
+  const { cards, reviewLog, corrections, settings, setSettings } = useStore();
   const navigate = useNavigate();
 
   const [deck, setDeck] = useState<Deck | "all">("all");
@@ -77,8 +77,37 @@ export function ReviewLanding() {
     { value: DECK.duolingo, label: `Duolingo · ${counts.Duolingo}` },
   ];
 
+  const correctionsCount = corrections.length;
+
   return (
-    <div style={{ maxWidth: 600, margin: "0 auto", padding: "72px 32px", display: "grid", placeItems: "center" }}>
+    <div style={{ maxWidth: 600, margin: "0 auto", padding: "72px 32px", display: "grid", placeItems: "center", gap: 16 }}>
+      {correctionsCount > 0 && (
+        <Surface
+          elevation="sm"
+          style={{ width: "100%", borderLeft: "3px solid var(--accent)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}
+        >
+          <div style={{ textAlign: "left" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <Icon name="refresh" size={16} style={{ color: "var(--accent)" }} />
+              <span style={{ fontSize: "var(--text-md)", fontWeight: 600 }}>
+                Corrections · {correctionsCount}
+              </span>
+            </div>
+            <div style={{ fontSize: "var(--text-sm)", color: "var(--ink-3)", marginTop: 3, maxWidth: 380 }}>
+              Cards you've missed. Get each right 3× in a row here to clear it.
+            </div>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            iconRight="arrowRight"
+            onClick={() => navigate("/review/run", { state: { filter: { corrections: true, limit: sessionSize } } })}
+          >
+            Review corrections
+          </Button>
+        </Surface>
+      )}
+
       <Surface elevation="md" style={{ width: "100%", textAlign: "center" }} pad={40}>
         <div style={{ fontFamily: "var(--font-serif)", fontSize: "var(--text-3xl)", fontWeight: 500, letterSpacing: "var(--tracking-tight)" }}>
           Ready when you are

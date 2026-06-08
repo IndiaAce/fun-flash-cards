@@ -10,6 +10,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Appear, Button, EmptyState, Icon, IconButton, Surface } from "@/components/kit";
 import { useStore } from "@/app/store";
 import { buildQueue, intervalPreviews, type QueueFilter } from "@/lib/srs";
+import { correctionQueue, correctionStreak, GRADUATE_STREAK } from "@/lib/corrections";
 import type { GradeId } from "@/lib/types";
 import { CardFace } from "./CardFace";
 import { GradeControl } from "./GradeControl";
@@ -20,14 +21,18 @@ interface ReviewResult {
 }
 
 export function ReviewRun() {
-  const { cards, reviewLog, settings, gradeCard } = useStore();
+  const { cards, reviewLog, corrections, settings, gradeCard } = useStore();
   const navigate = useNavigate();
   const location = useLocation();
   const filter = (location.state as { filter?: QueueFilter } | null)?.filter;
+  const correctionsMode = !!filter?.corrections;
 
   // Freeze the queue at entry so grading doesn't reshuffle mid-session.
   const queue = useMemo(
-    () => buildQueue(cards, reviewLog, filter ?? {}),
+    () =>
+      correctionsMode
+        ? correctionQueue(cards, corrections, { limit: filter?.limit })
+        : buildQueue(cards, reviewLog, filter ?? {}),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
   );
@@ -47,7 +52,7 @@ export function ReviewRun() {
     (g: GradeId) => {
       if (!revealed || !card || leaving) return;
       setLeaving(g);
-      gradeCard(card.id, g);
+      gradeCard(card.id, g, { corrections: correctionsMode });
       setResults((r) => [...r, { id: card.id, grade: g }]);
       setTimeout(() => {
         setLeaving(null);
@@ -55,7 +60,7 @@ export function ReviewRun() {
         setI((x) => x + 1);
       }, 360);
     },
-    [revealed, card, leaving, gradeCard],
+    [revealed, card, leaving, gradeCard, correctionsMode],
   );
 
   useEffect(() => {
@@ -108,8 +113,13 @@ export function ReviewRun() {
         ? "translateX(44px) rotate(2.5deg)"
         : "none";
 
+  // In corrections mode, show how close this card is to graduating.
+  const streakLabel = correctionsMode
+    ? ` · streak ${correctionStreak(corrections, card!.id)}/${GRADUATE_STREAK}`
+    : "";
+
   return (
-    <SessionFrame onExit={exit} progress={i / queue.length} count={`${i + 1} of ${queue.length}`}>
+    <SessionFrame onExit={exit} progress={i / queue.length} count={`${i + 1} of ${queue.length}${streakLabel}`}>
       <div style={{ maxWidth: 620, width: "100%" }}>
         <div
           key={card!.id}

@@ -9,7 +9,7 @@
 import type { PersistedState, Settings } from "@/lib/types";
 
 export const STORAGE_KEY = "compagnon";
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
 
 export const DEFAULT_SETTINGS: Settings = {
   theme: "light",
@@ -62,6 +62,8 @@ export function migrate(raw: any): PersistedState {
     schemaVersion: SCHEMA_VERSION,
     cards: Array.isArray(state.cards) ? state.cards : [],
     reviewLog: Array.isArray(state.reviewLog) ? state.reviewLog : [],
+    // v3 added the corrections queue; older payloads simply start empty.
+    corrections: Array.isArray(state.corrections) ? state.corrections : [],
     customCheatSheets: Array.isArray(state.customCheatSheets) ? state.customCheatSheets : [],
     settings: { ...DEFAULT_SETTINGS, ...(state.settings ?? {}) },
   };

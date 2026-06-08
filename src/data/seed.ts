@@ -79,6 +79,7 @@ export function buildSeedState(): PersistedState {
     schemaVersion: SCHEMA_VERSION,
     cards,
     reviewLog: seedReviewLog(cards),
+    corrections: [],
     // The subjonctif sheet is built-in (always available); custom sheets start empty.
     customCheatSheets: [],
     settings: { ...DEFAULT_SETTINGS },

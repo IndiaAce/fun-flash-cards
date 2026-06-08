@@ -16,12 +16,14 @@ import {
   type ReactNode,
 } from "react";
 import type {
+  CorrectionEntry,
   Flashcard,
   GradeId,
   PersistedState,
   ReviewLogEntry,
   Settings,
 } from "@/lib/types";
+import { applyCorrection } from "@/lib/corrections";
 import {
   loadState,
   saveState,
@@ -41,6 +43,7 @@ export interface BulkResult {
 interface StoreValue {
   cards: Flashcard[];
   reviewLog: ReviewLogEntry[];
+  corrections: CorrectionEntry[];
   settings: Settings;
 
   addCard: (input: NewCardInput) => void;
@@ -48,8 +51,13 @@ interface StoreValue {
   removeCard: (id: string) => void;
   bulkAdd: (inputs: NewCardInput[]) => BulkResult;
 
-  /** Grade a card during review: schedules it via FSRS and logs the result. */
-  gradeCard: (cardId: string, grade: GradeId) => void;
+  /**
+   * Grade a card during review: schedules it via FSRS, logs the result, and
+   * folds it into the corrections queue. Pass `{ corrections: true }` when the
+   * grade comes from a corrections-queue session so correct reps count toward
+   * graduation.
+   */
+  gradeCard: (cardId: string, grade: GradeId, opts?: { corrections?: boolean }) => void;
 
   setSettings: (patch: Partial<Settings>) => void;
 
@@ -92,16 +100,17 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     return { added: result.added, skipped: result.skipped };
   }, [state]);
 
-  const gradeCard = useCallback((cardId: string, grade: GradeId) => {
+  const gradeCard = useCallback((cardId: string, grade: GradeId, opts?: { corrections?: boolean }) => {
     setState((s) => {
       const card = s.cards.find((c) => c.id === cardId);
       if (!card) return s;
       const { card: nextSrs } = applyGrade(card.srs, grade);
+      const correct = !isLapse(grade);
       const entry: ReviewLogEntry = {
         id: crypto.randomUUID(),
         cardId,
         grade,
-        correct: !isLapse(grade),
+        correct,
         reviewedAt: new Date().toISOString(),
         category: card.category,
         tags: card.tags,
@@ -110,6 +119,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         ...s,
         cards: s.cards.map((c) => (c.id === cardId ? { ...c, srs: nextSrs } : c)),
         reviewLog: [...s.reviewLog, entry],
+        corrections: applyCorrection(s.corrections, cardId, correct, opts?.corrections ?? false),
       };
     });
   }, []);
@@ -129,6 +139,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     () => ({
       cards: state.cards,
       reviewLog: state.reviewLog,
+      corrections: state.corrections,
       settings: state.settings,
       addCard,
       updateCard,
